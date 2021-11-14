@@ -185,11 +185,12 @@ impl Encoder {
         })
     }
 
-    pub fn encode(&mut self, pts: i64, data: &[u8]) -> Result<Packets> {
+    pub fn encode(&mut self, pts: i64, data: &[u8], colorspace: ColorSpace) -> Result<Packets> {
         assert!(2 * data.len() >= 3 * self.width * self.height);
 
-        let image = MaybeUninit::zeroed();
+        let image = MaybeUninit::<vpx_sys::vpx_image_t>::zeroed();
         let mut image = unsafe { image.assume_init() };
+        image.cs = colorspace.into();
 
         call_vpx_ptr!(vpx_img_wrap(
             &mut image,
@@ -239,6 +240,32 @@ impl Drop for Encoder {
             if result != vpx_sys::VPX_CODEC_OK {
                 eprintln!("failed to destroy vpx codec: {result:?}");
             }
+        }
+    }
+}
+
+pub enum ColorSpace {
+    Unknown,
+    Bt601,
+    Bt709,
+    Smpte170,
+    Smpte240,
+    Bt2020,
+    Reserved,
+    SRgb,
+}
+
+impl From<ColorSpace> for vpx_sys::vpx_color_space_t {
+    fn from(orig: ColorSpace) -> Self {
+        match orig {
+            ColorSpace::Unknown => vpx_sys::vpx_color_space::VPX_CS_UNKNOWN,
+            ColorSpace::Bt601 => vpx_sys::vpx_color_space::VPX_CS_BT_601,
+            ColorSpace::Bt709 => vpx_sys::vpx_color_space::VPX_CS_BT_709,
+            ColorSpace::Smpte170 => vpx_sys::vpx_color_space::VPX_CS_SMPTE_170,
+            ColorSpace::Smpte240 => vpx_sys::vpx_color_space::VPX_CS_SMPTE_240,
+            ColorSpace::Bt2020 => vpx_sys::vpx_color_space::VPX_CS_BT_2020,
+            ColorSpace::Reserved => vpx_sys::vpx_color_space::VPX_CS_RESERVED,
+            ColorSpace::SRgb => vpx_sys::vpx_color_space::VPX_CS_SRGB,
         }
     }
 }

@@ -186,7 +186,10 @@ fn main() -> io::Result<()> {
 
                 convert::argb_to_i420(width as usize, height as usize, &frame, &mut yuv);
 
-                for frame in vpx.encode(ms as i64, &yuv).unwrap() {
+                for frame in vpx
+                    .encode(ms as i64, &yuv, vpx_encode::ColorSpace::Unknown)
+                    .unwrap()
+                {
                     vt.add_frame(frame.data, frame.pts as u64 * 1_000_000, frame.key);
                 }
             }

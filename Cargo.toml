@@ -8,7 +8,7 @@ version = "0.6.2"
 edition = "2018"
 
 [dependencies]
-env-libvpx-sys = "5.1.0"
+env-libvpx-sys = "5.1.3"
 thiserror = "1.0.33"
 
 [features]

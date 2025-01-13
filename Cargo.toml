@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 env-libvpx-sys = "5.1.0"
-thiserror = "1.0.33"
+thiserror = "2.0.11"
 
 [features]
 vp9 = []

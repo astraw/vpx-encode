@@ -66,6 +66,7 @@ impl Default for VideoCodecId {
 
 pub struct Encoder {
     ctx: vpx_codec_ctx_t,
+    cfg: vpx_codec_enc_cfg,
     width: usize,
     height: usize,
 }
@@ -183,6 +184,7 @@ impl Encoder {
 
         Ok(Self {
             ctx,
+            cfg: c,
             width: config.width as usize,
             height: config.height as usize,
         })
@@ -216,6 +218,13 @@ impl Encoder {
             ctx: &mut self.ctx,
             iter: ptr::null(),
         })
+    }
+
+    /// Sets a new target bitrate for the encoder
+    pub fn set_bitrate(&mut self, bitrate: c_uint) -> Result<()> {
+        self.cfg.rc_target_bitrate = bitrate;
+        call_vpx!(vpx_codec_enc_config_set(&mut self.ctx, &self.cfg));
+        Ok(())
     }
 
     pub fn finish(mut self) -> Result<Finish> {
@@ -331,5 +340,23 @@ impl Finish {
                 Ok(None)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_set_bitrate() {
+        let mut encoder = Encoder::new(Config {
+            width: 1920,
+            height: 1080,
+            timebase: [1, 30],
+            bitrate: 1000,
+            codec: VideoCodecId::VP8,
+        }).unwrap();
+
+        assert!(encoder.set_bitrate(2000).is_ok());
     }
 }
